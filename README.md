@@ -10,6 +10,10 @@ Developed a four-class image classifier to distinguish between clean, blurred, n
 
 The pipeline uses 2,000 photographs from the COCO dataset to generate 20,000 labeled image variants. Training, validation, and test sets are separated by original source image to prevent data leakage.
 
+### Example Image Corruptions
+
+![Image corruption examples](assets/corruption_examples.png)
+
 ## Model Performance
 
 Implemented and evaluated three classification approaches:
@@ -20,21 +24,41 @@ Implemented and evaluated three classification approaches:
 | Custom PyTorch CNN | 0.9086 |
 | ResNet18 (Transfer Learning) | 0.9981 |
 
-*Results are from source-separated synthetic test sets. The OpenCV and neural-network experiments used different test manifests, so scores are not a strictly matched comparison.*
+### Model Comparison
 
-ResNet18 achieved the highest in-distribution score. Additional testing with alternative corruption methods highlighted sensitivity to changes in the input distribution, motivating further robustness evaluation.
+![Model performance comparison](assets/model_comparison.png)
+
+*Scores were measured on source-separated synthetic test sets. The OpenCV experiment used 2,930 images, while the CNN and ResNet18 experiments used 2,980. Results are therefore not from an identical test split.*
+
+ResNet18 achieved the highest score on the original synthetic test distribution. An exploratory evaluation using alternative corruption methods identified potential robustness limitations that require further investigation.
+
+### Classification Error Analysis
+
+The OpenCV/Random Forest classifier performed well on blur and noise detection, with most misclassifications occurring between clean and JPEG-compressed images. The confusion matrix below shows its performance on 2,930 held-out synthetic variants.
+
+![OpenCV confusion matrix](assets/confusion_matrix.png)
 
 ## Key Features
 
 - **Image Processing:** Generated labeled variants across four image-quality classes using OpenCV.
 - **Model Development:** Compared handcrafted image features, a custom convolutional neural network, and pretrained ResNet18.
 - **Performance Evaluation:** Measured macro F1, precision, recall, and confusion matrices, with detailed error analysis by corruption type and severity.
-- **Inference Optimization:** Achieved a 23.34× speedup in CPU model-prediction time by batching 24 predictions instead of processing them individually.
+- **Inference Optimization:** Improved CPU inference efficiency through vectorized batch prediction.
 - **API Development:** Built a FastAPI application supporting individual and batch image classification.
 - **Containerization:** Dockerized the inference API for reproducible local deployment.
 - **Testing:** Implemented automated tests for inference behavior and invalid inputs.
 
-*The reported speedup measures model prediction only, excluding preprocessing and HTTP overhead.*
+
+## CPU Inference Optimization
+
+Vectorized batch prediction reduced CPU model-prediction
+time by approximately 23× compared with sequential
+prediction calls for 24 images.
+
+![CPU inference benchmark](assets/inference_benchmark.png)
+
+*Measurements cover the model-prediction stage only,
+excluding preprocessing and HTTP overhead.*
 
 ## Technology Stack
 
@@ -101,6 +125,12 @@ The dataset was constructed from 2,000 COCO source photographs, producing 20,000
 Original photographs and generated images are not included in this repository. Dataset-generation scripts, experiment metrics, evaluation reports, and model-training code are available in the project folders.
 
 The repository includes the trained OpenCV model. CNN and ResNet18 training experiments were conducted using Google Colab with GPU acceleration.
+
+### Experiment Results
+
+- [OpenCV evaluation metrics](experiments/opencv_metrics/)
+- [Dataset generation and split verification](experiments/full_dataset/)
+- [Classification error analysis](experiments/error_analysis/)
 
 ## Project Structure
 
