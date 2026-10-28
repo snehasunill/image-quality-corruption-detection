@@ -1,62 +1,119 @@
 # Image Quality & Corruption Detection
 
-A reproducible four-class image-quality classification experiment (`clean`, `blur`, `noise`, `jpeg`) using OpenCV/scikit-learn baselines, PyTorch CNNs, and ResNet18 transfer learning, with a Dockerized FastAPI inference service.
+An end-to-end computer vision project for detecting image-quality degradation using classical machine learning, deep learning, and transfer learning.
 
-## Results and evidence
+Built with Python, OpenCV, PyTorch, scikit-learn, FastAPI, and Docker.
 
-| Approach | Macro F1 | Evaluation caveat |
-| --- | ---: | --- |
-| OpenCV features + Random Forest | 0.9289 | 2,930 source-separated held-out synthetic variants |
-| Custom CNN | 0.9086 | 2,980 held-out synthetic variants (separate Colab build) |
-| ImageNet-pretrained ResNet18 | 0.9981 | 2,980 held-out synthetic variants (separate Colab build) |
+## Overview
 
-The OpenCV and neural model runs did **not** use identical test manifests; this is not a controlled matched-test ranking. A subsequent exploratory test of different corruption recipes on 100 COCO test-source photographs gave a reported ResNet18 macro F1 of 0.6452, but preprocessing equivalence needs auditing before drawing definitive conclusions. **No separate photographic collection has yet been evaluated.**
+Developed a four-class image classifier to distinguish between clean, blurred, noisy, and JPEG-compressed images. The project explores different modeling approaches, evaluates classification performance, and optimizes CPU inference for efficient deployment.
 
-- Original sources: 2,000 COCO photographs (not redistributed here).
-- Generated: 20,000 synthetic variants with grouped source-level splits.
-- OpenCV model: `artifacts/opencv/`; metrics and predictions: `experiments/opencv_metrics/`.
-- Generation audit: `experiments/full_dataset/build_report.json` and `manifest.csv`.
-- Error analysis: `experiments/error_analysis/`.
-- CPU model-stage batch vectorization: ~23.34x speedup on 24-image prediction batches compared with repeated single-sample prediction calls, based on nine repeats. **Not** an end-to-end HTTP speedup.
-- Trained neural checkpoints are separately preserved in Colab/Google Drive and are not included here.
+The pipeline uses 2,000 photographs from the COCO dataset to generate 20,000 labeled image variants. Training, validation, and test sets are separated by original source image to prevent data leakage.
 
-## Local setup
+## Model Performance
+
+Implemented and evaluated three classification approaches:
+
+| Model | Macro F1 |
+|---|---:|
+| OpenCV Features + Random Forest | 0.9289 |
+| Custom PyTorch CNN | 0.9086 |
+| ResNet18 (Transfer Learning) | 0.9981 |
+
+*Results are from source-separated synthetic test sets. The OpenCV and neural-network experiments used different test manifests, so scores are not a strictly matched comparison.*
+
+ResNet18 achieved the highest in-distribution score. Additional testing with alternative corruption methods highlighted sensitivity to changes in the input distribution, motivating further robustness evaluation.
+
+## Key Features
+
+- **Image Processing:** Generated labeled variants across four image-quality classes using OpenCV.
+- **Model Development:** Compared handcrafted image features, a custom convolutional neural network, and pretrained ResNet18.
+- **Performance Evaluation:** Measured macro F1, precision, recall, and confusion matrices, with detailed error analysis by corruption type and severity.
+- **Inference Optimization:** Achieved a 23.34× speedup in CPU model-prediction time by batching 24 predictions instead of processing them individually.
+- **API Development:** Built a FastAPI application supporting individual and batch image classification.
+- **Containerization:** Dockerized the inference API for reproducible local deployment.
+- **Testing:** Implemented automated tests for inference behavior and invalid inputs.
+
+*The reported speedup measures model prediction only, excluding preprocessing and HTTP overhead.*
+
+## Technology Stack
+
+**Languages:** Python
+
+**Machine Learning:** PyTorch, scikit-learn, torchvision
+
+**Computer Vision:** OpenCV, Pillow
+
+**Model Evaluation:** NumPy, pandas, scikit-learn metrics
+
+**Backend & Deployment:** FastAPI, Docker, Uvicorn
+
+**Testing:** pytest
+
+## Getting Started
+
+### Installation
 
 ```bash
+git clone https://github.com/snehasunill/image-quality-corruption-detection.git
+cd image-quality-corruption-detection
+
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+### Run Tests
+
+```bash
 pytest -q
+```
+
+### Start the API
+
+```bash
 MODEL_DIR=artifacts/opencv uvicorn api:app --host 127.0.0.1 --port 8000
 ```
 
-API documentation: `http://localhost:8000/docs`; endpoints: `/health`, `/predict`, `/batch`. Supply multipart JPEG/PNG images.
+Open `http://localhost:8000/docs` to explore the API.
 
-## Docker
+### Run with Docker
 
 ```bash
 docker build -t image-quality-api .
 docker run --rm -p 8000:8000 --name image-quality-api image-quality-api
 ```
 
-With the container running, use a different Terminal window to make a request:
+The deployed API uses the trained OpenCV/Random Forest model.
 
-```bash
-curl -F "file=@/path/to/photo.jpg" http://localhost:8000/predict
-```
+### API Endpoints
 
-The Docker image serves the saved OpenCV Random Forest model in `artifacts/opencv/`, **not** the ResNet18 checkpoint. Only load model artifacts from trusted sources.
+| Endpoint | Description |
+|---|---|
+| `GET /health` | Check API and model readiness |
+| `POST /predict` | Classify an uploaded image |
+| `POST /batch` | Classify multiple uploaded images |
 
-## Regenerating the dataset
+## Dataset & Experiments
 
-Original COCO photos are not included because of dataset size and image rights. Place permitted source photos in `my_source_photos/` and run:
+The dataset was constructed from 2,000 COCO source photographs, producing 20,000 synthetic image variants.
 
-```bash
-python -m quality.data --sources my_source_photos --output data/generated --variants 10 --size 128
-```
+Original photographs and generated images are not included in this repository. Dataset-generation scripts, experiment metrics, evaluation reports, and model-training code are available in the project folders.
 
-Other experiment scripts, training code, and the Colab notebook are included; see `quality/`, `train_cnn.py`, `notebooks/` and `experiments/`. For exact historical run evidence, use the saved manifests and metadata rather than assuming a new random split matches them.
+The repository includes the trained OpenCV model. CNN and ResNet18 training experiments were conducted using Google Colab with GPU acceleration.
 
-## Notes on provenance
+## Project Structure
 
-This was developed with AI coding assistance and verified by running local experiments, Colab GPU training, and Docker API tests. Git commits date when files were committed, not necessarily when experimentation originally started. Document project dates based on actual work rather than altering Git timestamps.
+- `quality/` — Dataset generation, feature extraction, and model training
+- `artifacts/` — Saved inference model
+- `experiments/` — Evaluation metrics, benchmarks, and error analysis
+- `notebooks/` — GPU training workflow
+- `tests/` — Automated tests
+- `api.py` — FastAPI inference service
+- `Dockerfile` — Container configuration
+
+## Future Improvements
+
+- Evaluate robustness on an independent photographic dataset.
+- Improve generalization across additional noise and compression methods.
+- Explore further inference optimizations and deployment configurations.
