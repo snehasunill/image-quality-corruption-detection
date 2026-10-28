@@ -1,0 +1,13 @@
+{
+  "input_sources": 2000,
+  "valid_sources": 2000,
+  "variants": 20000,
+  "size": 128,
+  "excluded": [],
+  "split_counts": {
+    "train": 13960,
+    "val": 3110,
+    "test": 2930
+  },
+  "synthetic": true
+}

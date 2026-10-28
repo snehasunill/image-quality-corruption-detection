@@ -1,0 +1,31 @@
+{
+  "images": 24,
+  "repeats": 9,
+  "serial_median_ms": 1056.473,
+  "batched_median_ms": 45.261,
+  "speedup": 23.34,
+  "outputs_equal": true,
+  "scope": "Model prediction only, features precomputed, random generated images, CPU environment",
+  "serial_trials_ms": [
+    1296.381,
+    1248.426,
+    1144.509,
+    1056.473,
+    993.821,
+    960.205,
+    979.492,
+    1063.521,
+    992.441
+  ],
+  "batched_trials_ms": [
+    46.346,
+    56.791,
+    44.499,
+    36.324,
+    34.401,
+    45.261,
+    44.015,
+    61.16,
+    46.57
+  ]
+}

@@ -1,0 +1,12 @@
+numpy
+pillow
+opencv-python-headless
+scikit-learn
+joblib
+torch
+torchvision
+fastapi
+uvicorn
+python-multipart
+pytest
+httpx
